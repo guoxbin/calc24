@@ -143,6 +143,27 @@ async fn index() -> HttpResponse {
             font-size: 0.9em;
             color: #888;
         }
+
+        .generate-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #667eea;
+            background: transparent;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .generate-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
         
         .calc-button {
             width: 100%;
@@ -313,6 +334,8 @@ async fn index() -> HttpResponse {
         
         <button class="calc-button" onclick="calculate()">算</button>
         
+        <button class="generate-btn" onclick="generateProblem()">出题</button>
+        
         <div id="result" class="result-section"></div>
     </div>
     
@@ -413,6 +436,52 @@ async fn index() -> HttpResponse {
             } finally {
                 button.disabled = false;
                 button.textContent = '算';
+            }
+        }
+
+        async function generateProblem() {
+            const input = document.getElementById('numbers');
+            const resultDiv = document.getElementById('result');
+            const isPoker = document.getElementById('range-poker').checked;
+            const btn = document.querySelector('.generate-btn');
+            
+            // 收集选中的运算符
+            const selectedOps = Array.from(document.querySelectorAll('input[name="operators"]:checked'))
+                .map(cb => cb.value);
+
+            if (selectedOps.length === 0) {
+                resultDiv.innerHTML = '<p class="error">请至少选择一个计算符号！</p>';
+                resultDiv.classList.add('show');
+                return;
+            }
+
+            const originalText = btn.textContent;
+            btn.textContent = '...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        range: isPoker ? 'poker' : 'basic',
+                        operators: selectedOps
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.problem) {
+                    input.value = data.problem;
+                    resultDiv.classList.remove('show');
+                    resultDiv.innerHTML = '';
+                }
+            } catch (error) {
+                console.error('Generate error:', error);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
             }
         }
         
@@ -866,6 +935,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .route("/", web::get().to(index))
             .route("/calculate", web::post().to(calculate))
+            .route("/generate", web::post().to(generate_problem))
     })
     .bind(("127.0.0.1", port))?
     .run()
