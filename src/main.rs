@@ -122,7 +122,7 @@ async fn index() -> HttpResponse {
             border-radius: 15px;
             outline: none;
             transition: all 0.3s ease;
-            letter-spacing: 0.5em;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
             font-weight: 600;
         }
@@ -326,10 +326,9 @@ async fn index() -> HttpResponse {
                 type="text" 
                 id="numbers" 
                 class="input-box" 
-                placeholder="例如: A239"
-                maxlength="4"
+                placeholder="例如: A, 2, 3, 9"
             />
-            <p class="hint" id="hint-text">可输入 A, 2, 3, 4, 5, 6, 7, 8, 9（A代表1）</p>
+            <p class="hint" id="hint-text">可输入 A, 2, 3, 4, 5, 6, 7, 8, 9（用逗号分隔）</p>
         </div>
         
         <button class="calc-button" onclick="calculate()">算</button>
@@ -345,11 +344,11 @@ async fn index() -> HttpResponse {
             const isPoker = document.getElementById('range-poker').checked;
             
             if (isPoker) {
-                hintText.textContent = '可输入 A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K（A/J/Q/K代表1/11/12/13）';
-                document.getElementById('numbers').placeholder = '例如: AJQ2';
+                hintText.textContent = '可输入 A, 2...10, J, Q, K（用逗号分隔）';
+                document.getElementById('numbers').placeholder = '例如: A, 10, J, Q';
             } else {
-                hintText.textContent = '可输入 A, 2, 3, 4, 5, 6, 7, 8, 9（A代表1）';
-                document.getElementById('numbers').placeholder = '例如: A239';
+                hintText.textContent = '可输入 A, 2...9（用逗号分隔）';
+                document.getElementById('numbers').placeholder = '例如: A, 2, 3, 9';
             }
         }
         
@@ -369,36 +368,39 @@ async fn index() -> HttpResponse {
                 return;
             }
             
-            const numbers = input.value.trim().toUpperCase();
+            const numbersStr = input.value.trim().toUpperCase();
+            // 支持中文逗号和英文逗号分隔
+            const tokens = numbersStr.split(/[,，]+/).map(s => s.trim()).filter(s => s.length > 0);
             
-            // 验证输入长度
-            if (numbers.length !== 4 && numbers.length !== 5 && numbers.length !== 6) {
-                resultDiv.innerHTML = '<p class="error">请输入4个数字！（10算作一个数字）</p>';
+            // 验证输入数量
+            if (tokens.length !== 4) {
+                resultDiv.innerHTML = '<p class="error">请输入4个数字，用逗号分隔！</p>';
                 resultDiv.classList.add('show');
                 return;
             }
             
             // 根据选择的范围验证输入
             let validChars;
-            let errorMsg;
             if (isPoker) {
-                // 扑克牌范围：需要特殊处理10
-                const pattern = /^(A|10|[2-9]|J|Q|K){4}$/;
-                const tokens = numbers.match(/A|10|[2-9]|J|Q|K/g);
-                if (!tokens || tokens.length !== 4) {
-                    resultDiv.innerHTML = '<p class="error">只能输入 A, 2-9, 10, J, Q, K，且必须是4个数字！</p>';
+                // 扑克牌范围：A, 2-10, J, Q, K
+                const valid = tokens.every(t => /^(A|10|[2-9]|J|Q|K)$/.test(t));
+                if (!valid) {
+                    resultDiv.innerHTML = '<p class="error">只能输入 A, 2-10, J, Q, K！</p>';
                     resultDiv.classList.add('show');
                     return;
                 }
             } else {
-                // 基础范围
-                validChars = /^[A2-9]{4}$/;
-                if (!validChars.test(numbers)) {
+                // 基础范围: A, 2-9
+                const valid = tokens.every(t => /^[A2-9]$/.test(t));
+                if (!valid) {
                     resultDiv.innerHTML = '<p class="error">只能输入 A, 2-9！</p>';
                     resultDiv.classList.add('show');
                     return;
                 }
             }
+            
+            // 发送给后端的是逗号分隔的字符串
+            const numbers = tokens.join(',');
             
             // 禁用按钮
             button.disabled = true;
@@ -526,24 +528,37 @@ struct GenerateResponse {
 
 async fn calculate(req: web::Json<CalculateRequest>) -> HttpResponse {
     let numbers = &req.numbers;
-    let range = &req.range;
+    let _range = &req.range;
     let operators = &req.operators;
 
     // 将输入转换为数字数组
-    let mut nums: Vec<f64> = if range == "poker" {
-        // 扑克牌范围：需要特殊处理 10, J, Q, K
-        parse_poker_numbers(numbers)
-    } else {
-        // 基础范围：A, 2-9
-        numbers
-            .chars()
-            .map(|c| match c {
-                'A' => 1.0,
-                '2'..='9' => c.to_digit(10).unwrap() as f64,
-                _ => 0.0,
-            })
-            .collect()
-    };
+    // 输入现在是逗号分隔的字符串
+    let tokens: Vec<&str> = numbers.split(',').map(|s| s.trim()).collect();
+
+    if tokens.len() != 4 {
+        return HttpResponse::BadRequest().json(CalculateResponse { solutions: vec![] });
+    }
+
+    let mut nums: Vec<f64> = Vec::new();
+
+    for token in tokens {
+        let val = match token {
+            "A" => 1.0,
+            "J" => 11.0,
+            "Q" => 12.0,
+            "K" => 13.0,
+            "10" => 10.0,
+            t => {
+                if let Ok(v) = t.parse::<f64>() {
+                    v
+                } else {
+                    return HttpResponse::BadRequest()
+                        .json(CalculateResponse { solutions: vec![] });
+                }
+            }
+        };
+        nums.push(val);
+    }
 
     if nums.len() != 4 {
         return HttpResponse::BadRequest().json(CalculateResponse { solutions: vec![] });
@@ -592,7 +607,7 @@ async fn generate_problem(req: web::Json<GenerateRequest>) -> HttpResponse {
         let solutions = solve_24(&mut nums.clone(), operators);
         if !solutions.is_empty() {
             return HttpResponse::Ok().json(GenerateResponse {
-                problem: display_chars.join(""),
+                problem: display_chars.join(", "),
             });
         }
     }
@@ -601,34 +616,6 @@ async fn generate_problem(req: web::Json<GenerateRequest>) -> HttpResponse {
     HttpResponse::Ok().json(GenerateResponse {
         problem: "AAAA".to_string(),
     })
-}
-
-fn parse_poker_numbers(input: &str) -> Vec<f64> {
-    let mut nums = Vec::new();
-    let mut chars = input.chars().peekable();
-
-    while let Some(c) = chars.next() {
-        let num = match c {
-            'A' => 1.0,
-            '1' => {
-                // 检查是否是 10
-                if chars.peek() == Some(&'0') {
-                    chars.next(); // 消费 '0'
-                    10.0
-                } else {
-                    1.0
-                }
-            }
-            '2'..='9' => c.to_digit(10).unwrap() as f64,
-            'J' => 11.0,
-            'Q' => 12.0,
-            'K' => 13.0,
-            _ => continue,
-        };
-        nums.push(num);
-    }
-
-    nums
 }
 
 #[derive(Clone)]
