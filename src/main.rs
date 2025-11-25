@@ -641,14 +641,14 @@ fn solve_24(nums: &mut Vec<f64>, allowed_ops: &[String]) -> Vec<String> {
     // 预处理二元运算符
     let binary_ops: Vec<String> = allowed_ops
         .iter()
-        .filter(|op| ["+", "-", "*", "/", "pow", "sqrt"].contains(&op.as_str()))
+        .filter(|op| ["+", "-", "*", "/", "pow", "sqrt", "log"].contains(&op.as_str()))
         .cloned()
         .collect();
 
     // 预处理一元运算符
     let unary_ops: Vec<String> = allowed_ops
         .iter()
-        .filter(|op| ["factorial", "log"].contains(&op.as_str()))
+        .filter(|op| ["factorial"].contains(&op.as_str()))
         .cloned()
         .collect();
 
@@ -706,19 +706,6 @@ fn generate_states_recursive(
             current_state.pop();
         }
     }
-
-    // 选项3：应用 log
-    if unary_ops.contains(&"log".to_string()) {
-        if val > 0.0 && val != 1.0 {
-            let log_val = val.log10();
-            current_state.push(GameNumber {
-                value: log_val,
-                expr: format!("log({})", base_num.expr),
-            });
-            generate_states_recursive(nums, index + 1, current_state, states, unary_ops);
-            current_state.pop();
-        }
-    }
 }
 
 fn solve_recursive(
@@ -744,15 +731,6 @@ fn solve_recursive(
             if let Some(fact_val) = factorial(n.value) {
                 if (fact_val - 24.0).abs() < epsilon {
                     solutions.push(format!("({})! = 24", n.expr));
-                }
-            }
-        }
-        // Log (虽然 log(x)=24 意味着 x=10^24，不太可能，但为了完整性)
-        if unary_ops.contains(&"log".to_string()) {
-            if n.value > 0.0 && n.value != 1.0 {
-                let log_val = n.value.log10();
-                if (log_val - 24.0).abs() < epsilon {
-                    solutions.push(format!("log({}) = 24", n.expr));
                 }
             }
         }
@@ -807,19 +785,6 @@ fn solve_recursive(
                             solve_recursive(path2_nums, solutions, binary_ops, unary_ops);
                         }
                     }
-                    // Log
-                    if unary_ops.contains(&"log".to_string()) {
-                        if res_val > 0.0 && res_val != 1.0 {
-                            let log_val = res_val.log10();
-                            let log_num = GameNumber {
-                                value: log_val,
-                                expr: format!("log({})", res_num.expr),
-                            };
-                            let mut path3_nums = next_nums.clone();
-                            path3_nums.push(log_num);
-                            solve_recursive(path3_nums, solutions, binary_ops, unary_ops);
-                        }
-                    }
                 }
             }
         }
@@ -831,6 +796,7 @@ fn fmt_op(lhs: &str, rhs: &str, op: &str) -> String {
     match op {
         "pow" => format!("{}^{}", lhs, rhs),
         "sqrt" => format!("<sup>{}</sup>√{}", rhs, lhs),
+        "log" => format!("log<sub>{}</sub>{}", rhs, lhs),
         _ => format!("({} {} {})", lhs, op, rhs),
     }
 }
@@ -866,6 +832,19 @@ fn eval_binary(a: f64, b: f64, op: &str) -> Option<f64> {
             } // 简单起见，暂不支持负数开方
 
             let res = a.powf(1.0 / b);
+            if res.is_finite() && res.abs() < 10000.0 {
+                Some(res)
+            } else {
+                None
+            }
+        }
+        "log" => {
+            // log_b(a) = log(a) / log(b)
+            // a 是真数，b 是底数
+            if a <= 0.0 || b <= 0.0 || b == 1.0 {
+                return None;
+            }
+            let res = a.log10() / b.log10();
             if res.is_finite() && res.abs() < 10000.0 {
                 Some(res)
             } else {
