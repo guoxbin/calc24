@@ -830,7 +830,7 @@ fn solve_recursive(
 fn fmt_op(lhs: &str, rhs: &str, op: &str) -> String {
     match op {
         "pow" => format!("{}^{}", lhs, rhs),
-        "sqrt" => format!("{}√{}", rhs, lhs), // b√a (b次根号a)
+        "sqrt" => format!("<sup>{}</sup>√{}", rhs, lhs),
         _ => format!("({} {} {})", lhs, op, rhs),
     }
 }
