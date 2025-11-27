@@ -14,3 +14,17 @@ body {
   align-items: center;
   padding: 20px;
 }
+
+/* 移动设备优化 */
+@media screen and (max-width: 768px) {
+  #root {
+    padding: 20px;
+    align-items: flex-start;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  #root {
+    padding: 15px;
+  }
+}

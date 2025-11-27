@@ -4,7 +4,6 @@
   box-sizing: border-box;
 }
 
-
 .container {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
@@ -51,7 +50,7 @@ h1 {
   display: flex;
   gap: 20px;
   justify-content: flex-start;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
 }
 
@@ -242,4 +241,194 @@ h1 {
   color: #e74c3c;
   font-size: 1em;
   margin-top: 10px;
+}
+
+/* ========================================
+   响应式设计 - Responsive Design
+   ======================================== */
+
+/* 平板设备 (Tablet) - 768px to 1024px */
+@media screen and (max-width: 1024px) {
+  .container {
+    padding: 40px 30px;
+    max-width: 700px;
+  }
+
+  h1 {
+    font-size: 2.8em;
+  }
+
+  .subtitle {
+    font-size: 1em;
+  }
+
+  .radio-option label {
+    font-size: 0.9em;
+  }
+
+  .input-box {
+    font-size: 1.8em;
+    padding: 18px;
+  }
+
+  .calc-button {
+    font-size: 1.6em;
+    padding: 16px;
+  }
+
+  .solution {
+    font-size: 1.1em;
+  }
+}
+
+/* 手机设备 (Mobile) - up to 768px */
+@media screen and (max-width: 768px) {
+  .container {
+    padding: 30px 20px;
+    border-radius: 15px;
+    max-width: 100%;
+  }
+
+  h1 {
+    font-size: 2.2em;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 0.95em;
+    margin-bottom: 30px;
+  }
+
+  .range-options {
+    margin-bottom: 20px;
+  }
+
+  .range-label {
+    font-size: 1em;
+    margin-bottom: 12px;
+  }
+
+  .radio-group {
+    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .radio-option {
+    padding: 8px 12px;
+    width: 100%;
+  }
+
+  .radio-option label {
+    font-size: 0.85em;
+    white-space: normal;
+    line-height: 1.4;
+  }
+
+  .operator-group {
+    gap: 10px;
+  }
+
+  .input-box {
+    font-size: 1.5em;
+    padding: 15px;
+    border-width: 2px;
+  }
+
+  .hint {
+    font-size: 0.85em;
+  }
+
+  .calc-button {
+    font-size: 1.4em;
+    padding: 14px;
+  }
+
+  .generate-btn {
+    padding: 8px 16px;
+    font-size: 0.95em;
+  }
+
+  .result-section {
+    margin-top: 30px;
+    padding: 20px;
+    min-height: 120px;
+  }
+
+  .result-title {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+  }
+
+  .solution {
+    font-size: 1em;
+    padding: 12px;
+    line-height: 1.6;
+  }
+
+  .no-solution {
+    font-size: 1.1em;
+  }
+
+  .error {
+    font-size: 0.95em;
+  }
+}
+
+/* 小屏手机 (Small Mobile) - up to 480px */
+@media screen and (max-width: 480px) {
+  .container {
+    padding: 20px 15px;
+  }
+
+  h1 {
+    font-size: 1.8em;
+  }
+
+  .subtitle {
+    font-size: 0.9em;
+    margin-bottom: 25px;
+  }
+
+  .range-label {
+    font-size: 0.95em;
+  }
+
+  .radio-option {
+    padding: 6px 10px;
+  }
+
+  .radio-option label {
+    font-size: 0.8em;
+  }
+
+  .radio-option input[type="radio"],
+  .radio-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+
+  .input-box {
+    font-size: 1.3em;
+    padding: 12px;
+  }
+
+  .calc-button {
+    font-size: 1.2em;
+    padding: 12px;
+  }
+
+  .generate-btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+  }
+
+  .result-section {
+    padding: 15px;
+  }
+
+  .solution {
+    font-size: 0.95em;
+    padding: 10px;
+  }
 }
