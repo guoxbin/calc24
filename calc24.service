@@ -1,0 +1,15 @@
+[Unit]
+Description=Calc24 Game Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/calc24
+Environment="PORT=3001"
+ExecStart=/opt/calc24/calc24
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
