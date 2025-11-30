@@ -1,0 +1,102 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # 当推送 v* 标签时触发（如 v1.0.0）
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    name: Build for Linux
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Build frontend
+        run: |
+          cd web
+          npm install
+          npm run build
+          cd ..
+      
+      - name: Build backend
+        run: cargo build --release
+      
+      - name: Create release package
+        run: |
+          mkdir -p release/calc24
+          cp target/release/calc24 release/calc24/
+          cp -r web/dist release/calc24/web/
+          cp calc24.service release/calc24/
+          cp README.md release/calc24/
+          cd release
+          tar -czf calc24-linux-x86_64.tar.gz calc24/
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: calc24-linux-x86_64
+          path: release/calc24-linux-x86_64.tar.gz
+      
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/calc24-linux-x86_64.tar.gz
+          body: |
+            ## 算24点 Linux 版本
+            
+            ### 安装步骤
+            
+            ```bash
+            # 1. 下载并解压
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/calc24-linux-x86_64.tar.gz
+            tar -xzf calc24-linux-x86_64.tar.gz
+            cd calc24
+            
+            # 2. 运行
+            ./calc24
+            
+            # 3. 或设置为系统服务
+            sudo cp calc24.service /etc/systemd/system/
+            sudo systemctl daemon-reload
+            sudo systemctl start calc24
+            sudo systemctl enable calc24
+            ```
+            
+            访问: http://服务器IP:3001
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
