@@ -66,9 +66,9 @@ jobs:
       
       - name: Create release package
         run: |
-          mkdir -p release/calc24
+          mkdir -p release/calc24/web
           cp target/x86_64-unknown-linux-musl/release/calc24 release/calc24/
-          cp -r web/ release/calc24/web/
+          cp -r web/dist release/calc24/web/
           cp calc24.service release/calc24/
           cp README.md release/calc24/
           cd release
