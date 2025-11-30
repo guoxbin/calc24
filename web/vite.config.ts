@@ -8,11 +8,7 @@ export default defineConfig({
         host: '0.0.0.0', // 允许外部访问
         port: 5173,
         proxy: {
-            '/calculate': {
-                target: 'http://localhost:3001',
-                changeOrigin: true,
-            },
-            '/generate': {
+            '/api': {
                 target: 'http://localhost:3001',
                 changeOrigin: true,
             },

@@ -414,10 +414,11 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let cors = Cors::permissive();
 
-        let mut app = App::new()
-            .wrap(cors)
-            .route("/calculate", web::post().to(calculate))
-            .route("/generate", web::post().to(generate_problem));
+        let mut app = App::new().wrap(cors).service(
+            web::scope("/api")
+                .route("/calculate", web::post().to(calculate))
+                .route("/generate", web::post().to(generate_problem)),
+        );
 
         // 如果存在静态文件目录，则服务静态文件
         if serve_static {

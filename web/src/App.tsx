@@ -55,7 +55,7 @@ function App() {
 
         setIsCalculating(true)
         try {
-            const response = await fetch('/calculate', {
+            const response = await fetch('/api/calculate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ function App() {
 
         setIsGenerating(true)
         try {
-            const response = await fetch('/generate', {
+            const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

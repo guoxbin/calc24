@@ -80,7 +80,7 @@ npm run dev
 
 ## API 接口
 
-### POST /calculate
+### POST /api/calculate
 计算给定数字的24点解法
 
 **请求体：**
@@ -102,7 +102,7 @@ npm run dev
 }
 ```
 
-### POST /generate
+### POST /api/generate
 生成一个有解的24点题目
 
 **请求体：**
