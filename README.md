@@ -170,6 +170,120 @@ cd web
 npm run build
 ```
 
+## 部署到 Linux 服务器
+
+### 方案一：单一可执行文件 + 静态文件（推荐）
+
+这种方式将前端构建成静态文件，后端编译成单一可执行文件，后端同时服务 API 和静态文件。
+
+#### 1. 构建
+
+```bash
+# 给构建脚本添加执行权限
+chmod +x build.sh
+
+# 运行构建脚本
+./build.sh
+```
+
+构建脚本会：
+- 构建前端静态文件到 `web/dist/`
+- 编译 Rust 后端为 Linux 可执行文件 `target/x86_64-unknown-linux-musl/release/calc24`
+
+#### 2. 部署
+
+```bash
+# 给部署脚本添加执行权限
+chmod +x deploy.sh
+
+# 部署到服务器
+./deploy.sh user@server:/path/to/deploy
+
+# 示例
+./deploy.sh root@192.168.1.100:/opt/calc24
+```
+
+#### 3. 在服务器上运行
+
+**方式一：直接运行**
+```bash
+cd /opt/calc24
+./calc24
+```
+
+**方式二：后台运行**
+```bash
+nohup ./calc24 > calc24.log 2>&1 &
+```
+
+**方式三：使用 systemd 服务（推荐）**
+```bash
+# 复制服务文件
+sudo cp calc24.service /etc/systemd/system/
+
+# 编辑服务文件，修改路径和用户
+sudo nano /etc/systemd/system/calc24.service
+
+# 重载 systemd
+sudo systemctl daemon-reload
+
+# 启动服务
+sudo systemctl start calc24
+
+# 设置开机自启
+sudo systemctl enable calc24
+
+# 查看状态
+sudo systemctl status calc24
+
+# 查看日志
+sudo journalctl -u calc24 -f
+```
+
+#### 4. 配置
+
+**环境变量：**
+- `PORT`: 服务端口（默认 3001）
+
+**示例：**
+```bash
+# 使用自定义端口
+PORT=8080 ./calc24
+```
+
+#### 5. Nginx 反向代理（可选）
+
+如果需要使用域名或 80/443 端口，可以配置 Nginx：
+
+```nginx
+server {
+    listen 80;
+    server_name calc24.example.com;
+
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### 部署架构说明
+
+**开发模式：**
+- 后端运行在 `127.0.0.1:3001`（仅本地访问）
+- 前端运行在 `localhost:5173`（Vite 开发服务器）
+- 前端通过代理访问后端 API
+
+**生产模式：**
+- 检测到 `web/dist` 目录时自动切换到生产模式
+- 后端运行在 `0.0.0.0:3001`（接受所有网络接口的连接）
+- 后端同时服务 API 和静态文件
+- 只需要一个可执行文件即可运行
+
 ## License
 
 MIT

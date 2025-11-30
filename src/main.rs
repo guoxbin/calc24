@@ -1,6 +1,8 @@
 use actix_cors::Cors;
+use actix_files as fs;
 use actix_web::{web, App, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 #[derive(Deserialize)]
 struct CalculateRequest {
@@ -379,22 +381,54 @@ fn format_num(n: f64) -> String {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let port = 3001;
-    let url = format!("http://localhost:{}", port);
+    let port = std::env::var("PORT")
+        .ok()
+        .and_then(|p| p.parse::<u16>().ok())
+        .unwrap_or(3001);
 
-    println!("🚀 启动算24点后端服务器...");
+    // 检查是否存在静态文件目录
+    let static_dir = PathBuf::from("web/dist");
+    let serve_static = static_dir.exists();
+
+    if serve_static {
+        println!("🚀 启动算24点服务器（生产模式）...");
+        println!(
+            "📁 静态文件目录: {:?}",
+            static_dir.canonicalize().unwrap_or(static_dir.clone())
+        );
+    } else {
+        println!("🚀 启动算24点后端服务器（开发模式）...");
+        println!("⚠️  未找到静态文件目录 web/dist，仅提供 API 服务");
+    }
+
+    let bind_addr = if serve_static {
+        "0.0.0.0" // 生产模式：监听所有网络接口
+    } else {
+        "127.0.0.1" // 开发模式：仅监听本地
+    };
+
+    let url = format!("http://{}:{}", bind_addr, port);
     println!("📡 服务地址: {}", url);
     println!("按 Ctrl+C 停止服务器");
 
-    HttpServer::new(|| {
-        let cors = Cors::permissive(); // 允许所有来源，开发环境使用
+    HttpServer::new(move || {
+        let cors = Cors::permissive();
 
-        App::new()
+        let mut app = App::new()
             .wrap(cors)
             .route("/calculate", web::post().to(calculate))
-            .route("/generate", web::post().to(generate_problem))
+            .route("/generate", web::post().to(generate_problem));
+
+        // 如果存在静态文件目录，则服务静态文件
+        if serve_static {
+            app = app
+                .service(fs::Files::new("/assets", "web/dist/assets").show_files_listing())
+                .service(fs::Files::new("/", "web/dist").index_file("index.html"));
+        }
+
+        app
     })
-    .bind(("127.0.0.1", port))?
+    .bind((bind_addr, port))?
     .run()
     .await
 }
