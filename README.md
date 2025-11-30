@@ -172,9 +172,31 @@ npm run build
 
 ## 部署到 Linux 服务器
 
-### 方案一：单一可执行文件 + 静态文件（推荐）
+### 方案一：使用 GitHub Releases（推荐）
 
-这种方式将前端构建成静态文件，后端编译成单一可执行文件，后端同时服务 API 和静态文件。
+利用 GitHub Actions 自动构建的 Linux 版本，无需本地编译环境。
+
+1. **下载**
+   在 GitHub 仓库的 [Releases 页面](https://github.com/guoxbin/calc24/releases) 下载最新版本的 `calc24-linux-x86_64.tar.gz`。
+
+2. **部署**
+   ```bash
+   # 上传到服务器
+   scp calc24-linux-x86_64.tar.gz user@server:/opt/
+   
+   # 解压
+   ssh user@server
+   cd /opt
+   tar -xzf calc24-linux-x86_64.tar.gz
+   cd calc24
+   
+   # 运行
+   ./calc24
+   ```
+
+### 方案二：手动构建部署
+
+如果你想自己构建，或者服务器架构不是 x86_64。
 
 #### 1. 构建
 
@@ -182,13 +204,9 @@ npm run build
 # 给构建脚本添加执行权限
 chmod +x build.sh
 
-# 运行构建脚本
+# 运行构建脚本（构建前端）
 ./build.sh
 ```
-
-构建脚本会：
-- 构建前端静态文件到 `web/dist/`
-- 编译 Rust 后端为 Linux 可执行文件 `target/x86_64-unknown-linux-musl/release/calc24`
 
 #### 2. 部署
 
@@ -196,11 +214,8 @@ chmod +x build.sh
 # 给部署脚本添加执行权限
 chmod +x deploy.sh
 
-# 部署到服务器
+# 部署到服务器（会自动在服务器上编译后端）
 ./deploy.sh user@server:/path/to/deploy
-
-# 示例
-./deploy.sh root@192.168.1.100:/opt/calc24
 ```
 
 #### 3. 在服务器上运行
