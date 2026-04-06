@@ -4,6 +4,7 @@ import RangeSelector from './components/RangeSelector'
 import OperatorSelector from './components/OperatorSelector'
 import NumberInput from './components/NumberInput'
 import Results from './components/Results'
+import FanCards from './components/FanCards'
 
 interface CalculateResponse {
     solutions?: string[]
@@ -114,38 +115,41 @@ function App() {
     }
 
     return (
-        <div className="container">
-            <h1>算24点</h1>
-            <p className="subtitle">输入4个数字，计算如何得到24</p>
+        <>
+            <FanCards />
+            <div className="container">
+                <h1>算24点</h1>
+                <p className="subtitle">输入4个数字，计算如何得到24</p>
 
-            <RangeSelector range={range} onChange={setRange} />
-            <OperatorSelector operators={operators} onChange={setOperators} />
+                <RangeSelector range={range} onChange={setRange} />
+                <OperatorSelector operators={operators} onChange={setOperators} />
 
-            <NumberInput
-                value={numbers}
-                onChange={setNumbers}
-                onKeyPress={handleKeyPress}
-                range={range}
-            />
+                <NumberInput
+                    value={numbers}
+                    onChange={setNumbers}
+                    onKeyPress={handleKeyPress}
+                    range={range}
+                />
 
-            <button
-                className="calc-button"
-                onClick={handleCalculate}
-                disabled={isCalculating}
-            >
-                {isCalculating ? '计算中...' : '算'}
-            </button>
+                <button
+                    className="calc-button"
+                    onClick={handleCalculate}
+                    disabled={isCalculating}
+                >
+                    {isCalculating ? '计算中...' : '算'}
+                </button>
 
-            <button
-                className="generate-btn"
-                onClick={handleGenerate}
-                disabled={isGenerating}
-            >
-                {isGenerating ? '...' : '出题'}
-            </button>
+                <button
+                    className="generate-btn"
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                >
+                    {isGenerating ? '...' : '出题'}
+                </button>
 
-            <Results results={results} />
-        </div>
+                <Results results={results} />
+            </div>
+        </>
     )
 }
 

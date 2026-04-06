@@ -5,14 +5,15 @@
 }
 
 .container {
-  background: rgba(255, 255, 255, 0.95);
+  background: #ffffff;
   border-radius: 20px;
   padding: 60px 40px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   text-align: center;
   max-width: 850px;
   width: 100%;
-  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 2;
 }
 
 h1 {

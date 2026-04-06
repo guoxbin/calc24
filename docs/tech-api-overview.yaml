@@ -1,0 +1,123 @@
+openapi: 3.1.0
+info:
+  title: 算24点 API
+  description: 24点游戏后端 API 接口
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001
+    description: 开发服务器
+  - url: http://127.0.0.1:3001
+    description: 本地开发服务器
+
+paths:
+  /api/calculate:
+    post:
+      summary: 计算给定数字的24点解法
+      description: 输入4个数字，返回所有可能的24点解法
+      operationId: calculate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateRequest'
+      responses:
+        '200':
+          description: 成功返回解法列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculateResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculateResponse'
+
+  /api/generate:
+    post:
+      summary: 生成一个有解的24点题目
+      description: 随机生成4个数字，确保存在至少一种24点解法
+      operationId: generateProblem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateRequest'
+      responses:
+        '200':
+          description: 成功返回生成的题目
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateResponse'
+
+components:
+  schemas:
+    CalculateRequest:
+      type: object
+      required:
+        - numbers
+        - range
+        - operators
+      properties:
+        numbers:
+          type: string
+          description: 逗号分隔的4个数字，支持 A,J,Q,K 和数字 1-13
+          example: "A,2,3,9"
+        range:
+          type: string
+          description: 数字范围
+          enum: [basic, poker]
+          example: "basic"
+        operators:
+          type: array
+          description: 允许的运算符列表
+          items:
+            type: string
+            enum: ["+", "-", "*", "/", "pow", "sqrt", "log", "factorial"]
+          example: ["+", "-", "*", "/"]
+
+    CalculateResponse:
+      type: object
+      required:
+        - solutions
+      properties:
+        solutions:
+          type: array
+          description: 所有可能的解法列表
+          items:
+            type: string
+          example: ["(A + 2 + 3) * 9 = 24"]
+
+    GenerateRequest:
+      type: object
+      required:
+        - range
+        - operators
+      properties:
+        range:
+          type: string
+          description: 数字范围
+          enum: [basic, poker]
+          example: "basic"
+        operators:
+          type: array
+          description: 允许的运算符列表
+          items:
+            type: string
+            enum: ["+", "-", "*", "/", "pow", "sqrt", "log", "factorial"]
+          example: ["+", "-", "*", "/"]
+
+    GenerateResponse:
+      type: object
+      required:
+        - problem
+      properties:
+        problem:
+          type: string
+          description: 生成的题目，逗号分隔的4个数字
+          example: "A, 2, 3, 9"
